@@ -1,13 +1,12 @@
 const express = require('express');
 const { Expo }  = require('expo-server-sdk');
-const AWS = require('aws-sdk');
+const config = require('./config.js');
+const isDev = process.env.NODE_ENV !== 'production';
+
 let port = process.env.PORT || 3000;
 
 const app = express();
 const expo = new Expo();
-
-const PUSH_REGISTRATION_ENDPOINT = 'http://ddf558bd.ngrok.io/token';
-const MESSAGE_ENPOINT = 'http://ddf558bd.ngrok.io/message';
 
 let savedPushTokens = [];
 const saveToken = (token) => {
@@ -51,16 +50,32 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('Push Notification Service is Running!'));
 
 app.post('/token', (req, res) => {
-    saveToken(req.body.token.value);
-    console.log(`Received push token, ${req.body.token.value}`);
-    res.send(`Received push token, ${req.body.token.value}`);
+    if (isDev) {
+        AWS.config.update(config.aws_local_config);
+      } else {
+        AWS.config.update(config.aws_remote_config);
+      }
+
+    const { token, useremail, isAcceptingPushNotifications, ownerId } = req.body;
+
+    saveToken(token);
+    console.log(`Received push token, ${token}`);
+    res.send(`Received push token, ${token}`);
 });
 
-
 app.post('/message', (req, res) => {
-    handlePushTokens(req.body.message);
-    console.log(`Received message, ${req.body.message}`);
-    res.send(`Received message, ${req.body.message}`);
+    if (isDev) {
+        AWS.config.update(config.aws_local_config);
+      } else {
+        AWS.config.update(config.aws_remote_config);
+    }
+
+    const { message } = req.body;
+
+
+    handlePushTokens(message);
+    console.log(`Received message, ${message}`);
+    res.send(`Received message, ${message}`);
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
