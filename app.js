@@ -2,33 +2,109 @@ const express = require('express');
 const { Expo }  = require('expo-server-sdk');
 const config = require('./config.js');
 const isDev = process.env.NODE_ENV !== 'production';
+const AWS = require('aws-sdk');
+const isDev = process.env.NODE_ENV !== 'production';
 
 let port = process.env.PORT || 3000;
+const config = {
+    aws_table_name: 'fruitsTable',
+    aws_local_config: {
+        region: 'local',
+        endpoint: 'http://localhost:3000'
+    },
+    aws_remote_config: {
+        accessKeyId: '__',
+        secretAccessKey: '__',
+        region: 'us-east-2',
+    }
+};
 
 const app = express();
 const expo = new Expo();
 
-let savedPushTokens = [];
-const saveToken = (token) => {
-    if (savedPushTokens.indexOf(token === -1)) {
-        console.log(token)
-        savedPushTokens.push(token);
+const scanParams = {
+    TableName: 'PushToken-npgjtlybgnfk7cxn6jgxihw7w4-local'
+}
+
+const saveToken = async (token) => {
+    console.log(token)
+    
+    const params = {
+        TableName: 'PushToken-npgjtlybgnfk7cxn6jgxihw7w4-local',
+        Token: token
     }
+
+    const db = new AWS.DynamoDB.DocumentClient();
+    const existingPushTokens = await db.scan(scanParams, (err, data) => {
+        if (!err) {
+            return data;
+        }
+    })
+
+    existingPushTokens = existingPushTokens.filter(ft => {
+        if (ft.id == token.id) {
+            return existingPushTokens;
+        };
+    })
+
+    if (existingPushTokens.length != 0) {
+        return await db.put(params, function(err, data) {
+            if (err) {
+                console.err('Unable to save item in table:', params.TableName)
+                return {
+                    success: false,
+                    message: 'Error: Server error saving push token'
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Success: Saved push token successfully'
+            };
+        });
+    } else {
+        return await updatePushToken(token, db)
+    };
   }
+
+const updatePushToken = async (token, db) => {
+    return await db.update(params, function(err, data) {
+        if (err) {
+            console.err('Unable update item in table:', params.TableName)
+            return {
+                success: false,
+                message: 'Error: Server error updating push token'
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Success: Saved push token successfully'
+        };
+    });
+}
 
 const handlePushTokens = (message) => {
     let notifications = [];
-    for (let pushToken of savedPushTokens) {
+    const existingPushTokens = await db.scan(scanParams, (err, data) => {
+        if (!err) {
+            return data;
+        }
+    })
+
+    for (let pushToken of existingPushTokens) {
         if (!Expo.isExpoPushToken(pushToken)) {
         console.error(`Push token ${pushToken} is not a valid Expo push token`);
         continue;
         }
+        console.log('Going to send this push token', pushToken)
+
         notifications.push({
-            to: pushToken,
+            to: pushToken.token,
             sound: 'default',
-            title: 'Message received!',
-            body: message,
-            data: { message }
+            title: 'WOTD is Ready!',
+            // body: message,
+            // data: { message }
         })
 
         let chunks = expo.chunkPushNotifications(notifications);
@@ -49,33 +125,30 @@ app.use(express.json());
 
 app.get('/', (req, res) => res.send('Push Notification Service is Running!'));
 
-app.post('/token', (req, res) => {
+app.post('/token', async (req, res) => {
     if (isDev) {
         AWS.config.update(config.aws_local_config);
       } else {
         AWS.config.update(config.aws_remote_config);
       }
 
-    const { token, useremail, isAcceptingPushNotifications, ownerId } = req.body;
+    const tokenData = req.body;
 
-    saveToken(token);
-    console.log(`Received push token, ${token}`);
-    res.send(`Received push token, ${token}`);
+    let result = await saveToken(tokenData);
+    console.log(`Received push token, ${result}`);
+    res.send(result);
 });
 
-app.post('/message', (req, res) => {
+app.post('/sendWOTDPush', async (req, res) => {
     if (isDev) {
         AWS.config.update(config.aws_local_config);
       } else {
         AWS.config.update(config.aws_remote_config);
     }
 
-    const { message } = req.body;
-
-
-    handlePushTokens(message);
-    console.log(`Received message, ${message}`);
-    res.send(`Received message, ${message}`);
+    const result = await handlePushTokens();
+    console.log(`Received message, ${result}`);
+    res.send(result);
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
