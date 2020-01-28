@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SOTC Push Notifications - Home</title>
+    <style>
+            label {
+                width: 100%;
+                flex: 1;
+            }
+    
+            input {
+                padding: 10px;
+            }
+    
+            button {
+                padding: 10px;
+                margin: 3px;
+            }
+    
+            .selected {
+                background-color: grey;
+                color: white;
+                box-shadow: 1px 3px grey;
+            }
+
+            #description {
+                margin-top: 25px;
+                border: 1px solid grey;
+                padding: 20px;
+            }
+    </style>
+</head>
+<body>
+    <h1>Send Push Noties to all my users!</h1>
+
+
+    <a href="/"><button class="selected">Home</button></a>
+    <a href="/CustomPushNotification"><button>Custom Push Notifications</button></a>
+    <a href="/WOTDPushNotification"><button>WOTD Push Notification</button></a>
+    <a href="/PushSubscribersDetails"><button>Push Subscribers Details</button></a>
+
+    <div id="description">
+        I created this website to send push notifications to all subscribers of the WOTD app. Isn't that neat!
+    </div>
+</body>
+</html>
+
