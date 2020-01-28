@@ -13,8 +13,8 @@ const config = {
         endpoint: 'http://localhost:3000'
     },
     aws_remote_config: {
-        accessKeyId: '__',
-        secretAccessKey: '__',
+        accessKeyId: 'AKIAIGUSZONA7H3OMESQ',
+        secretAccessKey: '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',
         region: 'us-east-2',
     }
 };
