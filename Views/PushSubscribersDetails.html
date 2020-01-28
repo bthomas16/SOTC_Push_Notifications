@@ -41,7 +41,7 @@
             }
         </style>
 </head>
-<body onload="getTokenDetails()">
+<body>
     <h1>Push Subscribers Details</h1>
 
     <a href="/"><button>Home</button></a>
@@ -50,44 +50,51 @@
     <a href="/PushSubscribersDetails"><button class="selected">Push Subscribers Details</button></a>
 
    
-    <div v-if="tokenDetails" class="list" id="tokenDetailsDiv">
-        <div style="margin-top: 20px">Total Push Token Users: {{ tokenDetails.Count }}</div>
-        <div class="pushUser" v-for="item in tokenDetails.Items">
-            <ul>
-                <li>
-                    ID: {{ item.id }}
-                </li>
-                <li>
-                    EMAIL: {{ item.email }}
-                </li>
-                <li>
-                    TOKEN: {{ item.token }}
-                </li>
-                <li>
-                    OWNER: {{ item.owner }}
-                </li>
-            </ul>
+    <div class="list" id="tokenDetailsDiv">
+        <div v-if="tokenDetails.Items">
+            <div style="margin-top: 20px">Total Push Token Users: {{ tokenDetails.Count }}</div>
+            <div class="pushUser" v-for="item in tokenDetails.Items">
+                <ul>
+                    <li>
+                        ID: {{ item.id }}
+                    </li>
+                    <li>
+                        EMAIL: {{ item.email }}
+                    </li>
+                    <li>
+                        TOKEN: {{ item.token }}
+                    </li>
+                    <li>
+                        OWNER: {{ item.owner }}
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
     <script>
-        const TOKEN_DETAILS_API = '/getUserPushTokenDetails'
-        function getTokenDetails() {
-            return fetch(TOKEN_DETAILS_API)
-            .then(res => { 
-                console.log('got data', res.body, res)
-                return res; 
-            }).catch(err => {
-                console.log('shietttt', err)
-                alert(err);   
-            });
-        }
-
         new Vue({
-        el: '#tokenDetailsDiv',
-        data: {
-            tokenDetails: getTokenDetails()
-        }
+            el: '#tokenDetailsDiv',
+            data: {
+                tokenDetails: {}
+            }, 
+            created() {
+                this.getTokenDetails()
+            },
+            methods: {
+                getTokenDetails() {
+                    return fetch('/getUserPushTokenDetails')
+                    .then(res => {
+                        return res.json(); 
+                    }).then(resJson => {
+                        console.log('got the json stuff', resJson);
+                        this.tokenDetails = resJson
+                    }).catch(err => {
+                        console.log('shietttt', err)
+                        alert(err);   
+                    });
+                }
+            }
         })
     </script>
 </body>

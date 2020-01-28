@@ -69,12 +69,9 @@
                 'Content-Type': 'application/json',
                 },
             }).then(res => {
-                console.log('returned message', res);
-                if (res.errMessage) {
-                    alert('Success is:', res.success, 'Custom message is:', res.message, 'Server err message is:', res.errMessage)  
-                } else {
-                    alert('Success is:', res.success, 'Custom Message is:', res.message)  
-                }
+                return res.json();
+            }).then(resJson => {
+                alert('Success is: ' + resJson.success + '; Custom message is: ' + resJson.message, '; Server err (if any): ' + resJson.errMessage)  
             }).catch(err => {
                 alert(err)
             });

@@ -1,6 +1,5 @@
 const express = require('express');
 const { Expo } = require('expo-server-sdk');
-// const Handlers = require('./Handlers/NotificationHandlers');
 // const isDev = process.env.NODE_ENV !== 'production';
 const AWS = require('aws-sdk');
 const isDev = false;
@@ -34,23 +33,6 @@ const scanParams = {
     TableName: 'PushToken-npgjtlybgnfk7cxn6jgxihw7w4-local'
 }
 
-// const saveToken = (tokenData, db) => {
-    
-// }
-
-// const sendWOTDPushNotification = (db) => {
-    
-// }
-
-// const sendCustomPushNotification = (pushData, db) => {
-//     console.log('sending custom data', pushData);
-    
-// }
-
-// const getUserPushTokenDetails = (db) => {
-//     return 
-// }
-
 app.post('/token', (req, res) => {
     AWS.config.update(config.aws_remote_config);
 
@@ -66,7 +48,7 @@ app.post('/token', (req, res) => {
     const db = new AWS.DynamoDB.DocumentClient();
     db.scan(scanParams, (err, data) => {
         if (err) {
-            res.send({
+            res.json({
                 success: false,
                 message: 'Unable to scan db for existing push tokens',
                 errMessage: err
@@ -79,13 +61,13 @@ app.post('/token', (req, res) => {
             db.put(params, (err, data) => {
                 if (err) {
                     console.log('Unable to save item in table:', params.TableName, token, err)
-                    res.send({
+                    res.json({
                         success: false,
                         message: 'Error: Server error saving push token',
                         errMessage: err
                     });
                 } else {
-                    res.send({
+                    res.json({
                         success: true,
                         message: 'Success: Saved push token successfully',
                         data: data
@@ -96,17 +78,14 @@ app.post('/token', (req, res) => {
     });
 });
 
-app.post('/sendWOTDPushNotification', (req, res) => {
-    // if (isDev) {
-    //     AWS.config.update(config.aws_local_config);
-    //   } else {
+app.post('/sendWOTDPushNotification', async (req, res) => {
     AWS.config.update(config.aws_remote_config);
-    // }
+
     const db = new AWS.DynamoDB.DocumentClient();
 
-    db.scan(scanParams, (err, data) => {
+    await db.scan(scanParams, (err, data) => {
         if (err) {
-            res.send({
+            res.json({
                 success: false,
                 message: 'Unable to find WOTD Push Notification tokens to send',
                 errMessage: err
@@ -122,8 +101,7 @@ app.post('/sendWOTDPushNotification', (req, res) => {
            notifications.push({
                to: pushToken.token,
                sound: 'default',
-               title: 'Your WOTD is Ready!',
-               // body: message,
+               title: 'Your WOTD is Ready!'
            })
    
            let chunks = expo.chunkPushNotifications(notifications);
@@ -138,23 +116,23 @@ app.post('/sendWOTDPushNotification', (req, res) => {
                }
            })();
         };
-        res.send({
+        res.json({
             success: true,
             message: 'Successfully sent WOTD push notifications'
         });
     });
 });
 
-app.post('/sendCustomPushNotification', (req, res) => {
+app.post('/sendCustomPushNotification', async (req, res) => {
     AWS.config.update(config.aws_remote_config);
 
     const db = new AWS.DynamoDB.DocumentClient();
 
     const pushData = req.body
 
-    db.scan(scanParams, (err, data) => {
+    await db.scan(scanParams, (err, data) => {
         if (err) {
-            res.send({
+            res.json({
                 success: false,
                 message: 'Unable to find WOTD Push Notification tokens to send',
                 errMessage: err
@@ -173,8 +151,7 @@ app.post('/sendCustomPushNotification', (req, res) => {
                sound: pushData.sound,
                title: pushData.title,
                body: pushData.body,
-               message: pushData.message,
-               // data: pushData.data // needs to be an object
+               message: pushData.message
            })
    
            let chunks = expo.chunkPushNotifications(notifications);
@@ -189,31 +166,28 @@ app.post('/sendCustomPushNotification', (req, res) => {
                }
            })();
         };
-        res.send({
+        res.json({
             success: true,
             message: 'Successfully sent Custom WOTD push notifications'
         });
     });
 });
 
-app.get('/getUserPushTokenDetails', (req, res) => {
-    // if (isDev) {
-    //     AWS.config.update(config.aws_local_config);
-    //   } else {
+app.get('/getUserPushTokenDetails', async (req, res) => {
     AWS.config.update(config.aws_remote_config);
-    // }
+
     const db = new AWS.DynamoDB.DocumentClient();
 
-    db.scan(scanParams, (err, data) => {
+    await db.scan(scanParams, (err, data) => {
         if (err) {
-            res.send({
+            res.json({
                 success: false,
                 message: 'Unable to find WOTD Push Notification tokens to send',
                 errMessage: err
             })
         }
         console.log('help me help you', data)
-        res.send(data);
+        res.json(data);
     });
 });
 

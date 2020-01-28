@@ -57,11 +57,6 @@
             <label for="">Sound:</label>        
             <input id="sound" name="sound" value="default">
         </div>
-
-        <div style="flex: 1; margin: 2rem; width: 100%">
-            <label for="">Data:</label>        
-            <input id="data" name="data" value="data">
-        </div>
     </form>
     <button type="submit" onclick="alertSendPush()">
         Send Custom Pushie
@@ -88,12 +83,9 @@
                     },
                     body: JSON.stringify(bodyData)
                 }).then(res => {
-                    console.log('returned message', res);
-                    if (res.errMessage) {
-                        alert('Success is:', res.success, 'Custom message is:', res.message, 'Server err message is:', res.errMessage)  
-                    } else {
-                        alert('Success is:', res.success, 'Custom Message is:', res.message)  
-                    }
+                    return res.json();
+                }).then(resJson => {
+                        alert('Success is: ' + resJson.success + '; Custom message is: ' + resJson.message, '; Server err (if any): ' + resJson.errMessage)  
                 }).catch(err => {
                     alert(err)
                 });
