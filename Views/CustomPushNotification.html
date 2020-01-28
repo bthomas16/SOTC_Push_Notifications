@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SOTC Push Notifications - Custom</title>
+
+    <style>
+        label {
+            width: 100%;
+            flex: 1;
+            flex-wrap: wrap
+        }
+
+        input {
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 3px;
+        }
+
+        .selected {
+            background-color: grey;
+            color: white;
+            box-shadow: 1px 3px grey;
+        }
+    </style>
+</head>
+<body>
+    <h1>WOTD - CUSTOM PUSH NOTIFICATION</h1>
+
+    <a href="/"><button>Home</button></a>
+    <a href="/CustomPushNotification"><button class="selected">Custom Push Notifications</button></a>
+    <a href="/WOTDPushNotification"><button>WOTD Push Notification</button></a>
+    <a href="/PushSubscribersDetails"><button>Push Subscribers Details</button></a>
+
+    <form>
+        <div style="flex: 1; margin: 2rem; width: 100%">
+            <label for="">Title:</label>
+            <input id="title" name="title" value="WOTD">
+        </div>
+
+        <div style="flex: 1; margin: 2rem; width: 100%">
+            <label for="">Message:</label>        
+            <textarea id="message" name="message" value="Discover more with WOTD"></textarea>
+        </div>
+
+        <div style="flex: 1; margin: 2rem; width: 100%">
+            <label for="">Body:</label>        
+            <input id="body" name="body" value="WOTD is getting better!">
+        </div>
+
+        <div style="flex: 1; margin: 2rem; width: 100%">
+            <label for="">Sound:</label>        
+            <input id="sound" name="sound" value="default">
+        </div>
+
+        <div style="flex: 1; margin: 2rem; width: 100%">
+            <label for="">Data:</label>        
+            <input id="data" name="data" value="data">
+        </div>
+    </form>
+    <button type="submit" onclick="alertSendPush()">
+        Send Custom Pushie
+    </button>
+
+
+    <script>
+        function alertSendPush() {
+            if(confirm('Send this push notification to ALL USERS?')) {
+                sendPush();
+            }
+        };
+
+        function sendPush() {
+            const PUSH_TEST_ENDPOINT = '/sendCustomPushNotification';
+            let bodyData = buildFormBody();
+            console.log('body data is', bodyData)
+            if (bodyData.title && bodyData.message && bodyData.sound) {
+                return fetch(PUSH_TEST_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bodyData)
+                }).then(res => {
+                    console.log('returned message', res);
+                    if (res.errMessage) {
+                        alert('Success is:', res.success, 'Custom message is:', res.message, 'Server err message is:', res.errMessage)  
+                    } else {
+                        alert('Success is:', res.success, 'Custom Message is:', res.message)  
+                    }
+                }).catch(err => {
+                    alert(err)
+                });
+            } else {
+                alert('The form is not properly filled out');
+            }
+        };
+
+        function buildFormBody() {
+            let title = document.getElementById('title').value;
+            let message = document.getElementById('message').value;
+            let body = document.getElementById('body').value;
+            let sound = document.getElementById('sound').value;
+            let data = document.getElementById('data').value;
+
+            let result = {
+                title,
+                message,
+                sound,
+                body,
+                data
+            }
+
+            return result;
+        }
+    </script>
+</body>
+</html>
+

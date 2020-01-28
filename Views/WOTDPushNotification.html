@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SOTC Push Notifications - WOTD</title>
+    <style>
+            label {
+                width: 100%;
+                flex: 1;
+            }
+    
+            input {
+                padding: 10px;
+            }
+    
+            button {
+                padding: 10px;
+                margin: 3px;
+            }
+    
+            .selected {
+                background-color: grey;
+                color: white;
+                box-shadow: 1px 3px grey;
+            }
+
+            .sendPushDiv {
+                flex: 1;
+                width: 100%;
+                padding: 25px;
+            }
+
+            .sendPushButton {
+                background-color: black;
+                color: white;
+            }
+        </style>
+</head>
+<body>
+    <h1>WOTD Push Notification</h1>
+
+    <a href="/"><button>Home</button></a>
+    <a href="/CustomPushNotification"><button>Custom Push Notifications</button></a>
+    <a href="/WOTDPushNotification"><button class="selected">WOTD Push Notification</button></a>
+    <a href="/PushSubscribersDetails"><button>Push Subscribers Details</button></a>
+
+    <div class="sendPushDiv">
+        <button onclick="alertSendPush()" class="sendPushButton">
+            Send WOTD Push Notification
+        </button>
+    </div>
+
+
+    <script>
+        function alertSendPush() {
+            if(confirm('Send this push notification to ALL USERS?')) {
+                sendPush();
+            }
+        };
+
+        const PUSH_TEST_ENDPOINT = '/sendWOTDPushNotification';
+        function sendPush() {
+            let result = fetch(PUSH_TEST_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                },
+            }).then(res => {
+                console.log('returned message', res);
+                if (res.errMessage) {
+                    alert('Success is:', res.success, 'Custom message is:', res.message, 'Server err message is:', res.errMessage)  
+                } else {
+                    alert('Success is:', res.success, 'Custom Message is:', res.message)  
+                }
+            }).catch(err => {
+                alert(err)
+            });
+        }
+    </script>
+</body>
+</html>
+
