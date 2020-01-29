@@ -39,6 +39,17 @@
                 color:black;
                 font-weight: 500;
             }
+
+            .userCount {
+                margin-top: 20px;
+                margin-bottom: 20px;
+                border: 1px solid black;
+            }
+
+            .userCountNumber {
+                border: 1.25px solid black;
+                font-weight: 1.5rem;
+            }
         </style>
 </head>
 <body>
@@ -52,7 +63,7 @@
    
     <div class="list" id="tokenDetailsDiv">
         <div v-if="tokenDetails.Items">
-            <div style="margin-top: 20px">Total Push Token Users: {{ tokenDetails.Count }}</div>
+            <div class="userCount">Total Push Token Users: <span>{{ tokenDetails.Count }}</span></div>
             <div class="pushUser" v-for="item in tokenDetails.Items">
                 <ul>
                     <li>

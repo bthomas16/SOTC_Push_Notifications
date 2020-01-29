@@ -191,4 +191,21 @@ app.get('/getUserPushTokenDetails', async (req, res) => {
     });
 });
 
+app.get('/toggleIsWearingReminder', async (req, res) => {
+    AWS.config.update(config.aws_remote_config);
+
+    const db = new AWS.DynamoDB.DocumentClient();
+
+    await db.scan(scanParams, (err, data) => {
+        if (err) {
+            res.json({
+                success: false,
+                message: 'Unable to find WOTD Push Notification tokens to send',
+                errMessage: err
+            })
+        }
+        let 
+    });
+});
+
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

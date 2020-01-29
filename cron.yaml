@@ -1,0 +1,8 @@
+version: 1
+cron:
+— name: “WOTD”
+     url: “/sendWOTDPushNotification”
+     schedule: “0 5 * * *”
+— name: “ToggleIsWearingReminder”
+     url: “/path-to post method”
+     schedule: “* * * * *”
