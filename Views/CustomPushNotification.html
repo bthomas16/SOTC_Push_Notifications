@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>SOTC Push Notifications - Custom</title>
+    <title>SOTC Push Notifications - Custom Push Notificaiton</title>
 
     <style>
         label {
@@ -27,14 +27,26 @@
             color: white;
             box-shadow: 1px 3px grey;
         }
+
+        .sendPushDiv {
+                flex: 1;
+                width: 100%;
+                padding: 25px;
+            }
+
+        .sendPushButton {
+            background-color: black;
+            color: white;
+        }
     </style>
 </head>
 <body>
-    <h1>WOTD - CUSTOM PUSH NOTIFICATION</h1>
+    <h1>Custom - Push Notification</h1>
 
     <a href="/"><button>Home</button></a>
     <a href="/CustomPushNotification"><button class="selected">Custom Push Notifications</button></a>
     <a href="/WOTDPushNotification"><button>WOTD Push Notification</button></a>
+    <a href="/StillWearingWatchPushNotification"><button>Still Wearing Watch Push Notification</button></a>
     <a href="/PushSubscribersDetails"><button>Push Subscribers Details</button></a>
 
     <form>
@@ -58,9 +70,12 @@
             <input id="sound" name="sound" value="default">
         </div>
     </form>
-    <button type="submit" onclick="alertSendPush()">
-        Send Custom Pushie
-    </button>
+
+    <div class="sendPushDiv">
+        <button type="submit" onclick="alertSendPush()" class="sendPushButton">
+            Send Custom Pushie
+        </button>
+    </div>
 
 
     <script>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SOTC Push Notifications - </title>
+    <style>
+            label {
+                width: 100%;
+                flex: 1;
+            }
+    
+            input {
+                padding: 10px;
+            }
+    
+            button {
+                padding: 10px;
+                margin: 3px;
+            }
+    
+            .selected {
+                background-color: grey;
+                color: white;
+                box-shadow: 1px 3px grey;
+            }
+
+            .sendPushDiv {
+                flex: 1;
+                width: 100%;
+                padding: 25px;
+            }
+
+            .sendPushButton {
+                background-color: black;
+                color: white;
+            }
+    </style>
+</head>
+<body>
+    <h1>Still Wearing Watch Reminder - Push Notification</h1>
+
+    <a href="/"><button>Home</button></a>
+    <a href="/CustomPushNotification"><button>Custom Push Notifications</button></a>
+    <a href="/WOTDPushNotification"><button>WOTD Push Notification</button></a>
+    <a href="/StillWearingWatchPushNotification"><button class="selected">Still Wearing Watch Push Notification</button></a>
+    <a href="/PushSubscribersDetails"><button>Push Subscribers Details</button></a>
+
+    <div class="sendPushDiv">
+        <button onclick="alertSendPush()" class="sendPushButton">
+            Send Still Wearing Reminder - Push Notification
+        </button>
+    </div>
+
+
+    <script>
+        function alertSendPush() {
+            if(confirm('Send this Push Notification to all users wearing a watch?')) {
+                sendPush();
+            }
+        };
+
+        const PUSH_TEST_ENDPOINT = '/stillWearingWatchPushNotification';
+        function sendPush() {
+            let result = fetch(PUSH_TEST_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                },
+            }).then(res => {
+                return res.json();
+            }).then(resJson => {
+                alert('Success is: ' + resJson.success + '; Custom message is: ' + resJson.message, '; Server err (if any): ' + resJson.errMessage)  
+            }).catch(err => {
+                console.log('get err',err)
+                alert(err)
+            });
+        }
+    </script>
+</body>
+</html>
+
