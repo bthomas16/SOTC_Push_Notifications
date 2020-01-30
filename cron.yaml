@@ -1,8 +1,0 @@
-version: 1
-cron:
-     — name: "WOTD"
-     url: "/sendWOTDPushNotification"
-     schedule: "0 5 * * *"
-     — name: "ToggleWearingReminder"
-     url: "/stillWearingWatchPushNotification"
-     schedule: "0 * * * *"

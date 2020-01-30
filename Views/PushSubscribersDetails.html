@@ -65,8 +65,9 @@
     <div class="list" id="tokenDetailsDiv">
         <div v-if="tokenDetails.Items">
             <div class="userCount">Total Push Token Users: <span>{{ tokenDetails.Count }}</span></div>
-            <div class="pushUser" v-for="item in tokenDetails.Items">
+            <div class="pushUser" v-for="(item, index) in tokenDetails.Items">
                 <ul>
+                    <h3>{{ index }}</h3>
                     <li>
                         ID: {{ item.id }}
                     </li>
@@ -77,7 +78,7 @@
                         TOKEN: {{ item.token }}
                     </li>
                     <li>
-                        OWNER: {{ item.userId }}
+                        UserId: {{ item.userId }}
                     </li>
                 </ul>
             </div>
