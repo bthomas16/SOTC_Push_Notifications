@@ -1,5 +1,6 @@
 const express = require('express');
 const { Expo } = require('expo-server-sdk');
+const schedule = require('node-schedule');
 // const isDev = process.env.NODE_ENV !== 'production';
 const AWS = require('aws-sdk');
 const isDev = false;
@@ -125,6 +126,34 @@ app.post('/sendWOTDPushNotification', async (req, res) => {
 });
 
 app.post('/sendCustomPushNotification', async (req, res) => {
+    await SendWOTDPushNotification(req, res)
+});
+
+app.get('/getUserPushTokenDetails', async (req, res) => {
+    AWS.config.update(config.aws_remote_config);
+    const db = new AWS.DynamoDB.DocumentClient();
+
+    const params = {
+        TableName: PUSH_TOKEN_TABLENAME
+    };
+
+    try {
+        let data = await db.scan(params).promise();
+        res.json(data);
+    } catch (err) {
+        res.json({
+            success: false,
+            message: 'Unable to find WOTD Push Notification tokens to send',
+            errMessage: err.message
+        })
+    }
+});
+
+app.post('/stillWearingWatchPushNotification', async (req, res) => {
+    await SendStillWearingReminderPushNotification(req, res);
+});
+
+async function SendWOTDPushNotification(req, res) {
     AWS.config.update(config.aws_remote_config);
     const db = new AWS.DynamoDB.DocumentClient();
     const pushData = req.body;
@@ -174,29 +203,9 @@ app.post('/sendCustomPushNotification', async (req, res) => {
             errMessage: err.message
         })   
     }
-});
+}
 
-app.get('/getUserPushTokenDetails', async (req, res) => {
-    AWS.config.update(config.aws_remote_config);
-    const db = new AWS.DynamoDB.DocumentClient();
-
-    const params = {
-        TableName: PUSH_TOKEN_TABLENAME
-    };
-
-    try {
-        let data = await db.scan(params).promise();
-        res.json(data);
-    } catch (err) {
-        res.json({
-            success: false,
-            message: 'Unable to find WOTD Push Notification tokens to send',
-            errMessage: err.message
-        })
-    }
-});
-
-app.post('/stillWearingWatchPushNotification', async (req, res) => {
+async function SendStillWearingReminderPushNotification(req, res) {
     AWS.config.update(config.aws_remote_config);
     const db = new AWS.DynamoDB.DocumentClient();
 
@@ -267,6 +276,20 @@ app.post('/stillWearingWatchPushNotification', async (req, res) => {
             errMessage: err.message
         })
     }
-});
+}
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+// const wotdJob = schedule.scheduleJob('0 5 * * *', function() {
+//     SendWOTDPushNotification();
+//     console.log('WOTD JOB SCHEDULED');
+// });
+
+// const wearingReminderJob = schedule.scheduleJob('0 * * * *', function() {
+//     SendStillWearingReminderPushNotification();
+//     console.log('WEARIN REMINDER JOB SCHEDULED');
+// });
+
+app.listen(port, () => {
+    console.log(`SOTC Push Notification Service listening on port ${port}!`)
+    // wotdJob.schedule();
+    // wearingReminderJob.schedule();
+});
