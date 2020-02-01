@@ -63,6 +63,7 @@ async function SendWOTDPushNotification() {
         const params = {
             TableName: PUSH_TOKEN_TABLENAME
         };
+        // Get all push tokens to send WOTD to
         let data = await db.scan(params).promise();
         const pushTokenObjects = data.Items;
         let notifications = [];
@@ -71,11 +72,27 @@ async function SendWOTDPushNotification() {
                console.error(`Push token ${pushToken} is not a valid Expo push token`);
                continue;
            }
-           notifications.push({
-               to: pushToken.token,
-               sound: 'default',
-               title: 'Your WOTD is Ready!'
-           });
+
+        const scanParams = {
+            TableName: WATCH_TABLENAME,
+            FilterExpression: 'owner = :w',
+            ExpressionAttributeValues: {
+                ':w': pushToken.userId
+            }
+        };
+        
+        let watches = await db.scan(scanParams).promise();
+        if (watches.length >= 1) {
+            let randomIndex = Math.floor(Math.random() * Math.floor(watches.length));
+            let watch = watches[randomIndex];
+    
+               notifications.push({
+                   to: pushToken.token,
+                   sound: 'default',
+                   title: 'Your WOTD is Ready!',
+                   body: BuildWOTDText(watch)
+               });
+            }
         };
 
         let chunks = expo.chunkPushNotifications(notifications);
@@ -101,6 +118,14 @@ async function SendWOTDPushNotification() {
             errMessage: err.message
         };
     }
+}
+
+function BuildWOTDText(watch) {
+    let name = watch.name;
+    if (watch.brand) {
+        return watch.brand + ' - ' + name;
+    }
+    return name;
 }
 
 async function SendCustomPushNotification(pushData) {
@@ -154,17 +179,23 @@ async function SendCustomPushNotification(pushData) {
     }
 }
 
+Date.prototype.subtractHours = function(h) {
+    this.setHours(this.getHours()-h);
+    return this;
+}
+
 async function SendStillWearingReminderPushNotification() {
     AWS.config.update(config.aws_remote_config);
     const db = new AWS.DynamoDB.DocumentClient();
 
     try { // get all watches current wearing for all users
-        const wearingStatus = true;
         const scanParams = {
             TableName: WATCH_TABLENAME,
-            FilterExpression: 'isCurrentlyWearing = :w',
+            FilterExpression: 'isCurrentlyWearing = :w AND dateLastWorn > :r AND dateLastReminded > :dlr',
             ExpressionAttributeValues: {
-                ':w': wearingStatus
+                ':w': true,
+                ':r': new Date().subtractHours(12),
+                ':dlr': new Date().subtractHours(8)
             }
         };
         
@@ -192,6 +223,21 @@ async function SendStillWearingReminderPushNotification() {
                             sound: 'default',
                             title: 'Are you still wearing:' + ' ' + watchWorn.name + '?',
                         });
+
+                        let updateParams = {
+                            TableName: WATCH_TABLENAME,
+                            Key:{
+                                "id": watchWorn.id,
+                                "owner": watchWorn.owner
+                            },
+                            UpdateExpression: "set dateLastReminded = :d",
+                            ExpressionAttributeValues: {
+                                ":d": BuildCurrentDate(new Date())
+                            },
+                            ReturnValues:"UPDATED_NEW"
+                        };
+
+                        let updatedWatchDateLastReminded = await db.update(updateParams).promise();
                     };
                 } catch (err) {
                     return {
@@ -201,6 +247,15 @@ async function SendStillWearingReminderPushNotification() {
                     };
                 };     
             };
+
+            const BuildCurrentDate = (dateValue) => {
+                dateValue = new Date(dateValue);
+                let mm = dateValue.getMonth() + 1;
+                let dd = dateValue.getDate();
+                let yyyy = dateValue.getFullYear();
+                let date = mm + '/' + dd + '/' + yyyy;
+                return date;
+            }
 
             let chunks = expo.chunkPushNotifications(notifications);
             (() => {
