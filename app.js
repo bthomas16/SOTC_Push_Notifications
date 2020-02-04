@@ -15,32 +15,32 @@ app.get('/PushSubscribersDetails', (req, res) => res.sendFile(__dirname + '/View
 app.post('/token', async (req, res) => {
     const body = req.body;
     const result = await Handlers.SavePushDetails(body);
-    console.log('save token', result)
+    console.log('Save Push Token Result:', result)
     res.json(result);
 });
 
 app.post('/sendWOTDPushNotification', async (req, res) => {
     const result = await Handlers.SendWOTDPushNotification();
-    console.log('send wotd', result)
+    console.log('WOTD Push Notification Result:', result)
     res.json(result);
 });
 
 app.post('/sendCustomPushNotification', async (req, res) => {
     const body = req.body;
     const result = await Handlers.SendCustomPushNotification(body);
-    console.log('send custom', result)
+    console.log('Custom Push Notification Result:', result)
     res.json(result);
 });
 
 app.post('/stillWearingWatchPushNotification', async (req, res) => {
     const result = await Handlers.SendStillWearingReminderPushNotification();
-    console.log('send still wearing', result)
+    console.log('Still Wearing Push Notification Result:', result)
     res.json(result);
 });
 
 app.get('/getUserPushTokenDetails', async (req, res) => {
     const result = await Handlers.GetUserPushTokenDetails(req, res);
-    console.log('get user details', result)
+    console.log('Getting User Push Token Data Result:', result)
     res.json(result);
 });
 

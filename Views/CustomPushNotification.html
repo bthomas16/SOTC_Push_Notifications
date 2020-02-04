@@ -49,7 +49,7 @@
     <a href="/StillWearingWatchPushNotification"><button>Still Wearing Watch Push Notification</button></a>
     <a href="/PushSubscribersDetails"><button>Push Subscribers Details</button></a>
 
-    <form>
+    <form style="width: 100%">
         <div style="flex: 1; margin: 2rem; width: 100%">
             <label for="">Title:</label>
             <input id="title" name="title" value="WOTD">
@@ -57,7 +57,7 @@
 
         <div style="flex: 1; margin: 2rem; width: 100%">
             <label for="">Message:</label>        
-            <textarea id="message" name="message" value="Discover more with WOTD"></textarea>
+            <textarea id="message" name="message" value="Discover more with WOTD" cols=75 rows=10></textarea>
         </div>
 
         <div style="flex: 1; margin: 2rem; width: 100%">
@@ -68,6 +68,11 @@
         <div style="flex: 1; margin: 2rem; width: 100%">
             <label for="">Sound:</label>        
             <input id="sound" name="sound" value="default">
+        </div>
+
+        <div style="flex: 1; margin: 2rem; width: 100%">
+            <label for="">Data:</label>        
+            <textarea id="data" name="data" value="{test: test1}" cols=50 rows=25></textarea>
         </div>
     </form>
 
@@ -114,12 +119,14 @@
             let message = document.getElementById('message').value;
             let body = document.getElementById('body').value;
             let sound = document.getElementById('sound').value;
+            let data = document.getElementById('data').value;
 
             let result = {
                 title,
                 message,
                 sound,
-                body
+                body,
+                data
             }
 
             return result;

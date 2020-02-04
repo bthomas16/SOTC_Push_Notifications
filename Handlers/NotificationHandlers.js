@@ -1,6 +1,7 @@
 const { Expo } = require('expo-server-sdk');
 const config = require('../config/config');
 const AWS = require('aws-sdk');
+const moment = require('moment');
 const uuid = require('uuid/v1');
 
 const PUSH_TOKEN_TABLENAME = "PushToken-npgjtlybgnfk7cxn6jgxihw7w4-local";
@@ -68,33 +69,49 @@ async function SendWOTDPushNotification() {
         const pushTokenObjects = data.Items;
         let notifications = [];
         for (let pushToken of pushTokenObjects) {
+
            if (!Expo.isExpoPushToken(pushToken.token)) {
                console.error(`Push token ${pushToken} is not a valid Expo push token`);
                continue;
            }
 
-        const scanParams = {
-            TableName: WATCH_TABLENAME,
-            FilterExpression: 'owner = :w',
-            ExpressionAttributeValues: {
-                ':w': pushToken.userId
-            }
-        };
+           try {
+            const scanParams = {
+                TableName: WATCH_TABLENAME,
+                FilterExpression: '#c = :w',
+                ExpressionAttributeNames: {
+                    '#c': 'owner'
+                },
+                ExpressionAttributeValues: {
+                    ':w': pushToken.userId
+                }
+            };
+
+            let watches = await db.scan(scanParams).promise();
+            if (watches.Count >= 1) {
+                let randomIndex = Math.floor(Math.random() * Math.floor(watches.Items.length));
+                let watch = watches.Items[randomIndex];
+                console.log('got the watch', watch, 'got the token', pushToken, 'length check', watches.Items.length)
         
-        let watches = await db.scan(scanParams).promise();
-        if (watches.length >= 1) {
-            let randomIndex = Math.floor(Math.random() * Math.floor(watches.length));
-            let watch = watches[randomIndex];
-    
-               notifications.push({
-                   to: pushToken.token,
-                   sound: 'default',
-                   title: 'Your WOTD is Ready!',
-                   body: BuildWOTDText(watch)
-               });
+                notifications.push({
+                    to: pushToken.token,
+                    sound: 'default',
+                    title: 'Your WOTD is Ready!',
+                    body: BuildWOTDText(watch)
+                });
+
+                console.log('trying to push', notifications);
             }
+        } catch (err) {
+            return {
+                success: false,
+                message: 'Unable to find WOTD Push Notification tokens to send',
+                errMessage: err.message
+            };
+        }
         };
 
+        console.log('this is the push happening', notifications)
         let chunks = expo.chunkPushNotifications(notifications);
         (() => {
             for (let chunk of chunks) {
@@ -150,7 +167,8 @@ async function SendCustomPushNotification(pushData) {
                sound: pushData.sound,
                title: pushData.title,
                body: pushData.body,
-               message: pushData.message
+               message: pushData.message,
+               data: pushData.data
            });
         };
 
@@ -179,9 +197,17 @@ async function SendCustomPushNotification(pushData) {
     }
 }
 
-Date.prototype.subtractHours = function(h) {
-    this.setHours(this.getHours()-h);
-    return this;
+// Date.prototype.subtractHours = function(h) {
+//     this.setHours(this.getHours() - h);
+//     return this;
+// }
+
+const checkHours = (propertyDate, h) => {
+    console.log('checking hours', propertyDate, h)
+    const hours = (h * 60 * 60 * 1000);
+    let result = ((new Date().getTime()) - new Date(propertyDate).getTime()) > hours;
+    console.log(result);
+    return result;
 }
 
 async function SendStillWearingReminderPushNotification() {
@@ -189,19 +215,25 @@ async function SendStillWearingReminderPushNotification() {
     const db = new AWS.DynamoDB.DocumentClient();
 
     try { // get all watches current wearing for all users
+        const wearingStatus = true;
         const scanParams = {
             TableName: WATCH_TABLENAME,
-            FilterExpression: 'isCurrentlyWearing = :w AND dateLastWorn > :r AND dateLastReminded > :dlr',
+            FilterExpression: 'isCurrentlyWearing = :w',
             ExpressionAttributeValues: {
-                ':w': true,
-                ':r': new Date().subtractHours(12),
-                ':dlr': new Date().subtractHours(8)
+                ':w': wearingStatus
             }
         };
         
         let watches = await db.scan(scanParams).promise();
-        
-        const watchesCurrentlyWearing = watches.Items;
+        const watchesCurrentlyWearing = watches.Items.filter(watch => {
+            let overLastWornLength = checkHours(watch.dateLastWorn, 12);
+            let overReminderLength = checkHours(watch.dateLastReminded, 8);
+            
+            if (overLastWornLength && overReminderLength) {
+                return watch;
+            };
+        });
+
         if (watchesCurrentlyWearing.length >= 1) {
             let notifications = [];
             for (let watchWorn of watchesCurrentlyWearing) {
@@ -224,17 +256,16 @@ async function SendStillWearingReminderPushNotification() {
                             title: 'Are you still wearing:' + ' ' + watchWorn.name + '?',
                         });
 
+                        let date = new Date().toISOString();
                         let updateParams = {
                             TableName: WATCH_TABLENAME,
                             Key:{
-                                "id": watchWorn.id,
-                                "owner": watchWorn.owner
+                                "id": watchWorn.id
                             },
-                            UpdateExpression: "set dateLastReminded = :d",
+                            UpdateExpression: "SET dateLastReminded = :d",
                             ExpressionAttributeValues: {
-                                ":d": BuildCurrentDate(new Date())
-                            },
-                            ReturnValues:"UPDATED_NEW"
+                                ":d": date
+                            }
                         };
 
                         let updatedWatchDateLastReminded = await db.update(updateParams).promise();
@@ -247,15 +278,6 @@ async function SendStillWearingReminderPushNotification() {
                     };
                 };     
             };
-
-            const BuildCurrentDate = (dateValue) => {
-                dateValue = new Date(dateValue);
-                let mm = dateValue.getMonth() + 1;
-                let dd = dateValue.getDate();
-                let yyyy = dateValue.getFullYear();
-                let date = mm + '/' + dd + '/' + yyyy;
-                return date;
-            }
 
             let chunks = expo.chunkPushNotifications(notifications);
             (() => {
@@ -274,7 +296,12 @@ async function SendStillWearingReminderPushNotification() {
                 success: true,
                 message: `Successfully sent still wearing watch reminder push notifications to ${notifications.length} users`
             };
-        };
+        } else {
+            return {
+                success: false,
+                message: 'No watches found matching isWearing criteria'
+            }
+        }
     } catch (err) {
         return {
             success: false,
