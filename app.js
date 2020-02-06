@@ -11,6 +11,7 @@ app.get('/CustomPushNotification', (req, res) => res.sendFile(__dirname + '/View
 app.get('/WOTDPushNotification', (req, res) => res.sendFile(__dirname + '/Views/WOTDPushNotification.html'));
 app.get('/StillWearingWatchPushNotification', (req, res) => res.sendFile(__dirname + '/Views/StillWearingWatchPushNotification.html'));
 app.get('/PushSubscribersDetails', (req, res) => res.sendFile(__dirname + '/Views/PushSubscribersDetails.html'));
+// app.get('/ScheduledJobs', (req, res) => res.sendFile(__dirname + '/Views/PushSubscribersDetails.html'));
 
 app.post('/token', async (req, res) => {
     const body = req.body;
